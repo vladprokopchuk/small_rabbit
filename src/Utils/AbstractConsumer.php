@@ -71,13 +71,13 @@ abstract class AbstractConsumer {
         $error = error_get_last();
         if ($error && $error['type'] === E_ERROR && strpos($error['message'], 'Maximum execution time') !== false)
         {
-            $this->log('Worker timeout limit exсeeded for job processing: ' . $this::class);
-//            $this->logToDB($this->message, 'Worker timeout limit exсeeded');
-            Process::run(PHP_BINARY . ' artisan messages:error ' . serialize([
+            $this->log('Worker timeout limit exceeded for job processing: ' . $this::class);
+//            $this->logToDB($this->message, 'Worker timeout limit exceeded');
+            Process::run(PHP_BINARY . " artisan messages:error --data='" . json_encode([
                     'error'   => 'Worker timeout limit exceeded',
                     'payload' => $this->message,
                     'class'   => $this::class,
-                ]))->output();
+                ]) . "'");
         }
     }
 
