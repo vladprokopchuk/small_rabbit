@@ -51,10 +51,8 @@ abstract class AbstractConsumer {
 
     /**
      * Should be implemented in app consumer class
-     *
-     * @return void
      */
-    public abstract function handle():void;
+    public abstract function handle();
 
     /**
      * Logging timeout exceeding for message consuming
@@ -99,7 +97,7 @@ abstract class AbstractConsumer {
      */
     protected function log(string $message, array $payload = []): void
     {
-        if (Rabbit::isLogEnabled())
+        if (app('rabbit')->isLogEnabled())
         {
             Log::error($message, $payload);
         }
