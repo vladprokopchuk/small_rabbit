@@ -73,11 +73,11 @@ abstract class AbstractConsumer {
         {
             $this->log('Worker timeout limit exceeded for job processing: ' . $this::class);
 //            $this->logToDB($this->message, 'Worker timeout limit exceeded');
-            Process::run(PHP_BINARY . " artisan messages:error --data='" . json_encode([
+            Process::run(PHP_BINARY . " artisan messages:error --data='" . base64_encode(json_encode([
                     'error'   => 'Worker timeout limit exceeded',
                     'payload' => $this->message,
                     'class'   => $this::class,
-                ]) . "'");
+                ])) . "'");
         }
     }
 

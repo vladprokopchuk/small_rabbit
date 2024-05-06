@@ -22,7 +22,7 @@ class SaveTimeoutExceedErrorCommand extends Command {
         $error = $this->option('data');
         if(!empty($error))
         {
-            $arr = json_decode($error, true);
+            $arr = json_decode(base64_decode($error), true);
 
             if (is_array($arr))
             {
