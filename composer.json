@@ -1,0 +1,33 @@
+{
+    "name": "prokopchuk/small-rabbit",
+    "description": "Library to work with RabbitMQ in Laravel apps",
+    "type": "library",
+    "require": {
+        "php": ">=8.1",
+        "php-amqplib/php-amqplib": "^3",
+        "laravel/framework": "^10.0 || ^11.0"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "SmallRabbit\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "vladprokopchuk",
+            "email": "vladprokopchuk@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SmallRabbit\\SmallRabbitServiceProvider"
+            ],
+            "aliases": {
+                "Rabbit": "SmallRabbit\\Facades\\Rabbit"
+            }
+        }
+
+    }
+}
