@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use League\CommonMark\Extension\CommonMark\Node\Block\ThematicBreak;
 use PhpAmqpLib\Message\AMQPMessage;
 use SmallRabbit\Services\Rabbit;
+use Illuminate\Support\Facades\DB;
 
 abstract class AbstractConsumer {
 
