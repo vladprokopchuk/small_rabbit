@@ -52,9 +52,9 @@ abstract class AbstractConsumer {
     /**
      * Should be implemented in app consumer class
      *
-     * @return mixed
+     * @return void
      */
-    public abstract function handle():mixed;
+    public abstract function handle():void;
 
     /**
      * Logging timeout exceeding for message consuming
