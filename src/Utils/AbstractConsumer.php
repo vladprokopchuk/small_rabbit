@@ -8,6 +8,7 @@ use League\CommonMark\Extension\CommonMark\Node\Block\ThematicBreak;
 use PhpAmqpLib\Message\AMQPMessage;
 use SmallRabbit\Services\Rabbit;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Process;
 
 abstract class AbstractConsumer {
 
@@ -29,22 +30,27 @@ abstract class AbstractConsumer {
         $this->message = $message->body;
         register_shutdown_function([$this, 'handleShutdown']);
         $attempt = 0;
-        while ($attempt < $this->tries) {
+        while ($attempt < $this->tries)
+        {
             set_time_limit($this->maxTime);
-            try {
+            try
+            {
 
                 return $this->handle($message);
-            $this->amqpMessage = $message;
+                $this->amqpMessage = $message;
                 break;
-            } catch (\Throwable $e) {
+            } catch (\Throwable $e)
+            {
                 $attempt++;
-                if ($attempt >= $this->tries) {
-                    $this->log("Max attempts reached for consumer:" . $this::class );
+                if ($attempt >= $this->tries)
+                {
+                    $this->log("Max attempts reached for consumer:" . $this::class);
                     $this->logToDB($this->message, 'Max attempts reached for consumer. Error:' . $e->getMessage());
-                } else {
-                    $this->log("Attempt #{$attempt} failed for consumer:" . $this::class );
+                } else
+                {
+                    $this->log("Attempt #{$attempt} failed for consumer:" . $this::class);
                 }
-                $this->log("Consumer" . $this::class . "error: ", [$e->getMessage()] );
+                $this->log("Consumer" . $this::class . "error: ", [$e->getMessage()]);
             }
         };
         set_time_limit(0);
@@ -63,9 +69,15 @@ abstract class AbstractConsumer {
     public function handleShutdown(): void
     {
         $error = error_get_last();
-        if ($error && $error['type'] === E_ERROR && strpos($error['message'], 'Maximum execution time') !== false) {
+        if ($error && $error['type'] === E_ERROR && strpos($error['message'], 'Maximum execution time') !== false)
+        {
             $this->log('Worker timeout limit exсeeded for job processing: ' . $this::class);
-            $this->logToDB($this->message, 'Worker timeout limit exсeeded');
+//            $this->logToDB($this->message, 'Worker timeout limit exсeeded');
+            Process::run(PHP_BINARY . ' artisan messages:error ' . serialize([
+                    'error'   => 'Worker timeout limit exceeded',
+                    'payload' => $this->message,
+                    'class'   => $this::class,
+                ]))->output();
         }
     }
 
@@ -116,18 +128,19 @@ abstract class AbstractConsumer {
     {
         if (config('smallrabbit.save_not_processed_messages'))
         {
+            if (empty($class))
+            {
+                $class = $this::class;
+            }
+            DB::table('not_processed_messages')->insert([
+                'payload'        => $payload,
+                'error'          => $error,
+                'consumer_class' => $class,
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
         }
-        if (empty($class))
-        {
-            $class = $this::class;
-        }
-        DB::table('not_processed_messages')->insert([
-            'payload' => $payload,
-            'error' => $error,
-            'consumer_class' => $class,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+
 
     }
 

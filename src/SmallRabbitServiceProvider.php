@@ -3,6 +3,7 @@
 namespace SmallRabbit;
 
 use Illuminate\Support\ServiceProvider;
+use SmallRabbit\Commands\SaveTimeoutExceedErrorCommand;
 use SmallRabbit\Services\RabbitHandlerInterface;
 use SmallRabbit\Services\RabbitHandler;
 use SmallRabbit\Commands\MessageConsumerCommand;
@@ -25,7 +26,8 @@ class SmallRabbitServiceProvider extends ServiceProvider {
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                MessageConsumerCommand::class
+                MessageConsumerCommand::class,
+                SaveTimeoutExceedErrorCommand::class
             ]);
         }
         $this->publishes([
