@@ -30,30 +30,47 @@ abstract class AbstractConsumer {
         $this->message = $message->body;
         register_shutdown_function([$this, 'handleShutdown']);
         $attempt = 0;
-        while ($attempt < $this->tries)
-        {
-            set_time_limit($this->maxTime);
-            try
-            {
+        $pcntlAvailable = extension_loaded('pcntl');
 
+        if ($pcntlAvailable) {
+            function timeoutHandler()
+            {
+                throw new SmallRabbitException('Message processing timed out.');
+            }
+
+            declare(ticks = 1);
+            pcntl_signal(SIGALRM, "timeoutHandler");
+        }
+
+        while ($attempt < $this->tries) {
+            if ($pcntlAvailable) {
+                pcntl_alarm($this->maxTime);
+            }
+
+            try {
                 return $this->handle($message);
+
+                if ($pcntlAvailable) {
+                    pcntl_alarm(0);
+                }
+
                 $this->amqpMessage = $message;
                 break;
-            } catch (\Throwable $e)
-            {
+            } catch (\Throwable $e) {
                 $attempt++;
-                if ($attempt >= $this->tries)
-                {
-                    $this->log("Max attempts reached for consumer:" . $this::class);
-                    $this->logToDB($this->message, 'Max attempts reached for consumer. Error:' . $e->getMessage());
-                } else
-                {
-                    $this->log("Attempt #{$attempt} failed for consumer:" . $this::class);
+                if ($attempt >= $this->tries) {
+                    $this->log("Max attempts reached for consumer: " . static::class);
+                    $this->logToDB($this->message, 'Max attempts reached for consumer. Error: ' . $e->getMessage());
+                } else {
+                    $this->log("Attempt #{$attempt} failed for consumer: " . static::class);
                 }
-                $this->log("Consumer" . $this::class . "error: ", [$e->getMessage()]);
+                $this->log("Consumer " . static::class . " error: ", [$e->getMessage()]);
             }
-        };
-        set_time_limit(0);
+        }
+
+        if ($pcntlAvailable) {
+            pcntl_alarm(0);
+        }
     }
 
     /**
@@ -72,9 +89,8 @@ abstract class AbstractConsumer {
         if ($error && $error['type'] === E_ERROR && strpos($error['message'], 'Maximum execution time') !== false)
         {
             $this->log('Worker timeout limit exceeded for job processing: ' . $this::class);
-//            $this->logToDB($this->message, 'Worker timeout limit exceeded');
             Process::run(PHP_BINARY . " artisan messages:error --data='" . base64_encode(json_encode([
-                    'error'   => 'Worker timeout limit exceeded',
+                    'error'   => $error['message'],
                     'payload' => $this->message,
                     'class'   => $this::class,
                 ])) . "'");

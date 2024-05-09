@@ -345,7 +345,7 @@ class RabbitHandler implements RabbitHandlerInterface {
      * @return void
      * @throws SmallRabbitException
      */
-    public function connect():void
+    public function connect(): void
     {
         $initialDelay = 2;
         while ($this->connectionAttempts < $this->maxConnectionAttempts && $this->totalDelay < $this->maxTotalDelay)
@@ -356,7 +356,17 @@ class RabbitHandler implements RabbitHandlerInterface {
                     config('smallrabbit.host'),
                     config('smallrabbit.port'),
                     config('smallrabbit.user'),
-                    config('smallrabbit.password')
+                    config('smallrabbit.password'),
+                    '/',
+                    false,
+                    'AMQPLAIN',
+                    null,
+                    'en_US',
+                    10.0, //
+                    10.0, //
+                    null,
+                    false,
+                    15 // Heartbeat interval
                 );
                 $this->channel = $this->connection->channel();
                 $this->connectionAttempts = 0;
